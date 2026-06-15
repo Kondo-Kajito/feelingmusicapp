@@ -55,7 +55,7 @@ async function analyzeFeeling() {
 
     try {
         // Pythonサーバー(ローカル)へデータを送る
-        const response = await fetch('http://localhost:8000/analyze-emotion', {
+        const response = await fetch('https://feelingmusicapp.onrender.com/analyze-emotion', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
