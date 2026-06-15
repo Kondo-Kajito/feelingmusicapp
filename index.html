@@ -15,6 +15,19 @@
         
         <section class="form-section">
             <input type="text" id="feeling-input" placeholder="例：今日はとても楽しい！">
+            
+            <div class="preference-group" style="display: flex; gap: 10px; width: 100%; margin-bottom: 1rem;">
+                <select id="genre-input" style="flex: 1; padding: 1rem; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 1rem; background-color: white;">
+                    <option value="">ジャンル（選択なし）</option>
+                    <option value="J-POP">J-POP</option>
+                    <option value="ロック">ロック</option>
+                    <option value="ジャズ">ジャズ</option>
+                    <option value="アニメソング">アニソン</option>
+                    <option value="クラシック">クラシック</option>
+                </select>
+                <input type="text" id="artist-input" placeholder="好きな歌手（任意）" style="flex: 1; margin-bottom: 0; padding: 1rem;">
+            </div>
+
             <button id="submit-button" onclick="analyzeFeeling()">AIに相談する</button>
         </section>
 
