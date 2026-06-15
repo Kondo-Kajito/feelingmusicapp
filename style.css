@@ -1,0 +1,122 @@
+/* 全体のスタイル：優しく落ち着いた雰囲気に */
+body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+    background-color: #f7f9fc;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 50px 20px;
+}
+
+h1 {
+    color: #5c6ac4;
+    margin-bottom: 10px;
+}
+
+p.subtitle {
+    color: #666;
+    margin-bottom: 40px;
+}
+
+/* 感情選択ボタンのコンテナ */
+.emotion-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    max-width: 800px;
+    margin: 0 auto 40px auto;
+}
+
+/* ボタンの共通デザイン */
+.emotion-btn {
+    background-color: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 30px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.emotion-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+/* MBTIグループごとのカラー（ホバー時） */
+.btn-analyst:hover {
+    border-color: #805ad5;
+    background-color: #faf5ff;
+    color: #805ad5;
+}
+
+.btn-diplomat:hover {
+    border-color: #38a169;
+    background-color: #f0fff4;
+    color: #38a169;
+}
+
+.btn-sentinel:hover {
+    border-color: #3182ce;
+    background-color: #ebf8ff;
+    color: #3182ce;
+}
+
+.btn-explorer:hover {
+    border-color: #dd6b20;
+    background-color: #fffaf0;
+    color: #dd6b20;
+}
+
+/* 楽曲提案エリア（初期状態は非表示） */
+#result-section {
+    display: none;
+    background-color: #ffffff;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#emotion-message {
+    color: #5c6ac4;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.song-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2d3748;
+    margin: 10px 0;
+}
+
+.artist-name {
+    color: #718096;
+    margin-bottom: 20px;
+}
+
+.play-btn {
+    background-color: #5c6ac4;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 40px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.play-btn:hover {
+    background-color: #434190;
+}

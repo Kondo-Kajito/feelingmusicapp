@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>感情リンク・ミュージック (MBTI版)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>今のあなたの性格タイプ（MBTI）は？</h1>
+    <p class="subtitle">あなたのMBTIに寄り添った、今聴くべき1曲を提案します。</p>
+
+    <div style="max-width: 600px; margin: 0 auto 40px auto; background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h3 style="color: #5c6ac4; margin-top: 0;">💬 AIに今の気持ちを伝えてみる</h3>
+        <textarea id="user-feeling" rows="3" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-bottom: 10px;" placeholder="例：今日は仕事で失敗してしまって、すごく落ち込んでいます..."></textarea>
+        <button onclick="analyzeFeeling()" class="emotion-btn" style="background-color: #5c6ac4; color: white; border: none;">AIに相談する</button>
+    </div>
+
+    <div class="emotion-container">
+        <button class="emotion-btn btn-analyst" onclick="suggestSong('INTJ')">INTJ (建築家)</button>
+        <button class="emotion-btn btn-analyst" onclick="suggestSong('INTP')">INTP (論理学者)</button>
+        <button class="emotion-btn btn-analyst" onclick="suggestSong('ENTJ')">ENTJ (指揮官)</button>
+        <button class="emotion-btn btn-analyst" onclick="suggestSong('ENTP')">ENTP (討論者)</button>
+
+        <button class="emotion-btn btn-diplomat" onclick="suggestSong('INFJ')">INFJ (提唱者)</button>
+        <button class="emotion-btn btn-diplomat" onclick="suggestSong('INFP')">INFP (仲介者)</button>
+        <button class="emotion-btn btn-diplomat" onclick="suggestSong('ENFJ')">ENFJ (主人公)</button>
+        <button class="emotion-btn btn-diplomat" onclick="suggestSong('ENFP')">ENFP (広報運動家)</button>
+
+        <button class="emotion-btn btn-sentinel" onclick="suggestSong('ISTJ')">ISTJ (管理者)</button>
+        <button class="emotion-btn btn-sentinel" onclick="suggestSong('ISFJ')">ISFJ (擁護者)</button>
+        <button class="emotion-btn btn-sentinel" onclick="suggestSong('ESTJ')">ESTJ (幹部)</button>
+        <button class="emotion-btn btn-sentinel" onclick="suggestSong('ESFJ')">ESFJ (領事館)</button>
+
+        <button class="emotion-btn btn-explorer" onclick="suggestSong('ISTP')">ISTP (巨匠)</button>
+        <button class="emotion-btn btn-explorer" onclick="suggestSong('ISFP')">ISFP (冒険家)</button>
+        <button class="emotion-btn btn-explorer" onclick="suggestSong('ESTP')">ESTP (起業家)</button>
+        <button class="emotion-btn btn-explorer" onclick="suggestSong('ESFP')">ESFP (エンターテイナー)</button>
+    </div>
+
+    <div id="result-section">
+        <p id="emotion-message" style="color: #5c6ac4; font-weight: bold; white-space: pre-wrap;"></p>
+        
+        <img id="album-art" src="" style="display:none; width: 120px; border-radius: 8px; margin: 15px auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        
+        <div class="song-title" id="song-title">楽曲名が表示されます</div>
+        <div class="artist-name" id="artist-name">アーティスト名</div>
+        
+        <audio id="audio-player" controls style="display:none; width: 100%; margin-top: 15px;"></audio>
+        
+        <p id="music-error" style="display:none; color: #e53e3e; font-size: 14px; margin-top: 10px;">※楽曲の試聴データが見つかりませんでした。</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
