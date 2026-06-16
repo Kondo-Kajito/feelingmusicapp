@@ -1,15 +1,27 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from google import genai
 import urllib.request
 import urllib.parse
 import json
+import random
+import re
+from typing import List
 
+# Gemini APIを使うためのライブラリ
+import google.generativeai as genai
+
+# ==========================================
+# 🔑 ここに取得したGeminiのAPIキーを貼り付けてください
+# ==========================================
 GEMINI_API_KEY = "AQ.Ab8RN6INKMI0AQe0FWjri3PFO_ZMEuJzzsuo_uVEyyu7uZ1loQ"
-GEMINI_MODEL_NAME = "gemini-3.5-flash" 
+genai.configure(api_key=GEMINI_API_KEY)
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel(
+    'gemini-2.0-flash',
+    generation_config={"response_mime_type": "application/json"}
+)
+
 app = FastAPI()
 
 app.add_middleware(
@@ -20,57 +32,159 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# データの受け取り口に genre と favorite_artist を追加
+# 💡 Geminiがダウンした時用の予備データ（先ほどの独自アルゴリズム用）
+EMOTION_MAP = {
+    "楽しい": {"keywords": ["ポップ", "ダンス", "明るい", "爽快"], "message": "最高にウキウキな気分ですね！さらにテンションが上がるような弾けるナンバーをセレクトしました！✨"},
+    "疲れた": {"keywords": ["リラックス", "チル", "アコースティック", "ヒーリング"], "message": "今日もお疲れ様でした。頑張ったあなたを優しく包み込む、心がほっと落ち着く曲たちです。☕"},
+    "悲しい": {"keywords": ["バラード", "泣ける", "しっとり", "切ない"], "message": "無理に元気を出さなくても大丈夫ですよ。あなたの涙や寂しさにそっと寄り添ってくれる、温かい名曲を選びました。☔"},
+    "イライラ": {"keywords": ["ロック", "激しい", "エネルギッシュ", "パンク"], "message": "モヤモヤした気持ち、吹き飛ばしちゃいましょう！爆音で聴いてスッキリできるような曲をどうぞ！⚡"},
+    "緊張": {"keywords": ["クラシック", "ジャズ", "ピアノ", "インスト"], "message": "ドキドキしているあなたへ。深呼吸をひとつして、この心地よい音色に身を委ねてみてくださいね。🍀"},
+    "恋": {"keywords": ["ラブソング", "甘い", "ロマンチック"], "message": "胸がキュンとする素敵なシチュエーションですね！とっておきのラブソングたちです。💕"}
+}
+
 class EmotionRequest(BaseModel):
     text: str
     genre: str = ""
     favorite_artist: str = ""
+    genres: List[str] = []
+    eras: List[str] = []
+    weather: str = ""
+    situation: str = ""
 
 @app.post("/analyze-emotion")
 async def analyze_emotion(req: EmotionRequest):
-    # AIへの指示書（プロンプト）にユーザーの好みを組み込む！
-    prompt = f"""
-    ユーザーが今の気持ちを次のように入力しました：「{req.text}」
-    
-    【ユーザーの音楽の好み（もし指定があれば選曲の参考にしてください）】
-    - 好きなジャンル: {req.genre if req.genre else '特になし'}
-    - 好きなアーティストや雰囲気: {req.favorite_artist if req.favorite_artist else '特になし'}
-    
-    この感情に寄り添う優しいメッセージと、ユーザーの好みを考慮したおすすめの有名な楽曲を1曲提案してください。
-    必ず以下のJSONフォーマットのみで出力してください。
-    {{
-        "mbti": "INFP",
-        "message": "寄り添うメッセージ",
-        "song_title": "楽曲名（正確に）",
-        "artist": "アーティスト名（正確に）"
-    }}
-    """
-    
     try:
-        response = client.models.generate_content(
-            model=GEMINI_MODEL_NAME,
-            contents=prompt
-        )
+        # ==========================================
+        # 🤖 パターンA: まずは本物のAI（Gemini）を試す
+        # ==========================================
+        try:
+            print("🤖 Geminiに考えさせています...")
+            prompt = f"""
+            あなたはユーザーの心に寄り添う、優秀な音楽コンシェルジュです。
+
+            【ユーザーの現在の状態と好み】
+            ・今の気分: {req.text}
+            ・天候: {req.weather if req.weather else '指定なし'}
+            ・シチュエーション: {req.situation if req.situation else '指定なし'}
+            ・好きなジャンル: {', '.join(req.genres) if req.genres else '指定なし'}
+            ・好きな年代: {', '.join(req.eras) if req.eras else '指定なし'}
+
+            ユーザーは現在「{req.weather}」の中で、「{req.situation}」というシチュエーションで音楽を聴こうとしています。
+            この状況と気分に最高にマッチする実在する楽曲を3つ選び、iTunes APIで検索しやすいように「アーティスト名 曲名」のキーワードとして出力してください。
+            また、状況に触れた共感できるDJメッセージを考えてください。
+
+            必ず以下のJSONフォーマットで出力してください。
+            {{
+                "message": "ユーザーへの温かいDJメッセージ",
+                "search_queries": ["アーティスト名 曲名", "アーティスト名 曲名", "アーティスト名 曲名"]
+            }}
+            """
+            
+            ai_response = model.generate_content(prompt)
+            ai_result = json.loads(ai_response.text)
+            
+            dj_message = ai_result.get("message", "あなたにぴったりの曲を選びました🎧")
+            search_queries = ai_result.get("search_queries", ["ヒット曲"])
+            
+            print(f"✅ Gemini成功！\n💬 {dj_message}")
+
+            songs_list = []
+            for query in search_queries:
+                encoded_query = urllib.parse.quote(query)
+                url = f"https://itunes.apple.com/search?term={encoded_query}&entity=song&limit=1&country=JP"
+                req_itunes = urllib.request.Request(url)
+                with urllib.request.urlopen(req_itunes) as res:
+                    data = json.loads(res.read().decode())
+                    if data['resultCount'] > 0:
+                        track = data['results'][0]
+                        songs_list.append({
+                            "song_title": track.get('trackName', '不明なタイトル'),
+                            "artist": track.get('artistName', '不明なアーティスト'),
+                            "preview_url": track.get('previewUrl'),
+                            "artwork_url": track.get('artworkUrl100'),
+                            "duration_ms": track.get('trackTimeMillis', 0)
+                        })
+
+            if songs_list:
+                return {
+                    "message": dj_message,
+                    "songs": songs_list
+                }
+                
+        except Exception as gemini_err:
+            # もしGeminiが利用制限(429)などでエラーになったら、ここでキャッチ！
+            print(f"⚠️ Geminiが制限に達したため、予備システムに切り替えます: {gemini_err}")
+            pass # そのまま下のパターンBへ流れる
+
+        # ==========================================
+        # 🛡️ パターンB: Geminiがダメなら独自アルゴリズム（予備システム）を起動！
+        # ==========================================
+        print("🛡️ 予備システムで選曲を開始します...")
+        user_text = req.text
+        matched_emotion = None
+        for key, data in EMOTION_MAP.items():
+            if key in user_text:
+                matched_emotion = data
+                break
         
-        result_text = response.text.replace('```json', '').replace('```', '').strip()
-        result_json = json.loads(result_text)
+        query_parts = []
+        profile_intro_parts = []
         
-        search_query = f"{result_json['song_title']} {result_json['artist']}"
+        if req.genres:
+            chosen_genre = random.choice(req.genres)
+            query_parts.append(chosen_genre)
+            profile_intro_parts.append(f"お好みの {chosen_genre} をベースに")
+
+        if req.weather:
+            clean_weather = re.sub(r'[^\w\sぁ-んァ-ン一-龥]', '', req.weather).strip()
+            if clean_weather:
+                query_parts.append(clean_weather)
+            profile_intro_parts.append(f"今の「{req.weather}」の空模様に合わせて")
+            
+        if req.situation:
+            profile_intro_parts.append(f"「{req.situation}」のお供に")
+        
+        profile_intro = "、".join(profile_intro_parts) + "セレクトしました！\n\n" if profile_intro_parts else ""
+
+        if matched_emotion:
+            secret_keyword = random.choice(matched_emotion["keywords"])
+            query_parts.append(secret_keyword)
+            dj_message = f"{profile_intro}{matched_emotion['message']}"
+        else:
+            query_parts.append(req.text[:10]) 
+            dj_message = f"{profile_intro}「{req.text}」という今の気分に寄り添う曲を見つけました🎧"
+
+        search_query = " ".join(query_parts).strip()
+        if not search_query: search_query = "ヒット曲"
+
         encoded_query = urllib.parse.quote(search_query)
-        url = f"https://itunes.apple.com/search?term={encoded_query}&entity=song&limit=1&country=JP"
+        url = f"https://itunes.apple.com/search?term={encoded_query}&entity=song&limit=30&country=JP"
         
         req_itunes = urllib.request.Request(url)
         with urllib.request.urlopen(req_itunes) as res:
             data = json.loads(res.read().decode())
             if data['resultCount'] > 0:
-                track = data['results'][0]
-                result_json['preview_url'] = track.get('previewUrl')
-                result_json['artwork_url'] = track.get('artworkUrl100')
+                tracks = data['results']
+                random.shuffle(tracks)
+                selected_tracks = tracks[:4]
+                
+                songs_list = []
+                for track in selected_tracks:
+                    songs_list.append({
+                        "song_title": track.get('trackName', '不明なタイトル'),
+                        "artist": track.get('artistName', '不明なアーティスト'),
+                        "preview_url": track.get('previewUrl'),
+                        "artwork_url": track.get('artworkUrl100'),
+                        "duration_ms": track.get('trackTimeMillis', 0)
+                    })
+
+                return {"message": dj_message, "songs": songs_list}
             else:
-                result_json['preview_url'] = None
-            
-        return result_json
+                return {
+                    "message": f"ごめんなさい、今の組み合わせだと曲が見つかりませんでした💦 条件を変えてみてください！",
+                    "songs": []
+                }
         
     except Exception as e:
-        print(f"エラーの詳細: {e}")
-        return {"error": "AIの分析か楽曲の検索に失敗しました。"}
+        print(f"エラー発生: {str(e)}")
+        return {"error": f"処理に完全に失敗しました💦\n詳細: {str(e)}"}

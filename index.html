@@ -3,49 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feeling Music App</title>
+    <title>MOODTUNES AI</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <main class="main-container">
-        <header>
-            <h1>Feeling Music</h1>
-            <p>今の気持ちを入力してください。AIがあなたに寄り添う音楽とメッセージを提案します。</p>
+    <div class="app-container">
+        <header class="header">
+            <div>
+                <p class="subtitle">MOODTUNES AI</p>
+                <h1>今の気分は？</h1>
+            </div>
         </header>
-        
-        <section class="form-section">
-            <input type="text" id="feeling-input" placeholder="例：今日はとても楽しい！">
+
+        <main class="main-content">
             
-            <div class="preference-group" style="display: flex; gap: 10px; width: 100%; margin-bottom: 1rem;">
-                <select id="genre-input" style="flex: 1; padding: 1rem; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 1rem; background-color: white;">
-                    <option value="">ジャンル（選択なし）</option>
-                    <option value="J-POP">J-POP</option>
-                    <option value="ロック">ロック</option>
-                    <option value="ジャズ">ジャズ</option>
-                    <option value="アニメソング">アニソン</option>
-                    <option value="クラシック">クラシック</option>
-                </select>
-                <input type="text" id="artist-input" placeholder="好きな歌手（任意）" style="flex: 1; margin-bottom: 0; padding: 1rem;">
+            <div id="home-view" class="view-section">
+                <div class="chat-area" id="chat-area">
+                    <div class="message bot-message">
+                        やあ！今どんな気分？<br>
+                        何でも話してくれたら、その気持ちに合った音楽を見つけるよ。
+                    </div>
+                    
+                    <div class="suggest-buttons" style="display: flex; gap: 8px; margin-top: 10px;">
+                        <button class="pref-btn" onclick="setFeeling('最近ちょっと疲れてる')">最近ちょっと疲れてる ☕</button>
+                        <button class="pref-btn" onclick="setFeeling('今日めちゃくちゃ嬉しいことあった')">めちゃくちゃ嬉しい ✨</button>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔍</span>
+                        <input type="text" id="feeling-input" placeholder="今の気持ちを入力してみて...">
+                    </div>
+                    <button class="send-btn" onclick="analyzeFeeling()">送信</button>
+                </div>
             </div>
 
-            <button id="submit-button" onclick="analyzeFeeling()">AIに相談する</button>
-        </section>
+            <div id="library-view" class="view-section">
+                <div class="library-header">
+                    <div>
+                        <h2>ライブラリ</h2>
+                        <p style="color: #797593; font-size: 13px;">お気に入りやプレイリスト</p>
+                    </div>
+                    <button class="small-btn" onclick="saveAsPlaylist()">＋ プレイリスト保存</button>
+                </div>
+                
+                <h3 class="section-title">マイプレイリスト</h3>
+                <div id="playlist-container" class="song-list-container" style="margin-bottom: 30px;">
+                    <p style="color: #56526d; font-size: 14px; text-align: center; margin-top: 10px;">プレイリストはまだありません</p>
+                </div>
 
-        <section id="result-section" style="display:none;">
-            <div class="result-card">
-                <p id="emotion-message" style="color: #5c6ac4; font-weight: bold; white-space: pre-wrap;"></p>
-                
-                <img id="album-art" src="" style="display:none; width: 120px; border-radius: 8px; margin: 15px auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                
-                <div class="song-title" id="song-title">楽曲名が表示されます</div>
-                <div class="artist-name" id="artist-name">アーティスト名</div>
-                
-                <audio id="audio-player" controls style="display:none; width: 100%; margin-top: 15px;"></audio>
-                
-                <p id="music-error" style="display:none; color: #e53e3e; font-size: 14px; margin-top: 10px;">※楽曲の試聴データが見つかりませんでした。</p>
+                <h3 class="section-title">お気に入り楽曲</h3>
+                <div id="library-list" class="song-list-container">
+                    <p style="color: #56526d; font-size: 14px; text-align: center; margin-top: 10px;">まだお気に入りの曲がありません</p>
+                </div>
             </div>
-        </section>
-    </main>
+
+            <div id="profile-view" class="view-section">
+                <h2>プロフィール & 状況</h2>
+                <p style="color: #797593; font-size: 13px; margin-bottom: 20px;">今の状態を設定してAIセレクトに反映させよう</p>
+                
+                <h3 class="section-title">現在の天候</h3>
+                <div class="pref-grid grid-4 weather-grid">
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'weather-grid')">晴れ ☀️</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'weather-grid')">曇り ☁️</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'weather-grid')">雨 🌧️</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'weather-grid')">雪 ❄️</button>
+                </div>
+
+                <h3 class="section-title">今のシチュエーション</h3>
+                <div class="pref-grid grid-2 situation-grid">
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'situation-grid')">朝の準備 🌅</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'situation-grid')">通学・通勤・ドライブ 🚗</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'situation-grid')">お仕事・お勉強 ✍️</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'situation-grid')">まったりカフェタイム ☕</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'situation-grid')">ワークアウト・運動 🏃</button>
+                    <button class="pref-btn" onclick="toggleSinglePref(this, 'situation-grid')">夜の晩酌・読書 🌙</button>
+                </div>
+
+                <h3 class="section-title">好きな世代（複数選択可）</h3>
+                <div class="pref-grid grid-4">
+                    <button class="pref-btn" onclick="togglePref(this)">70's</button>
+                    <button class="pref-btn" onclick="togglePref(this)">80's</button>
+                    <button class="pref-btn active" onclick="togglePref(this)">90's</button>
+                    <button class="pref-btn active" onclick="togglePref(this)">00's</button>
+                    <button class="pref-btn" onclick="togglePref(this)">10's</button>
+                    <button class="pref-btn" onclick="togglePref(this)">20's</button>
+                </div>
+
+                <h3 class="section-title">好きなジャンル（複数選択可）</h3>
+                <div class="pref-grid grid-3">
+                    <button class="pref-btn active" onclick="togglePref(this)"><span class="pref-emoji">🎤</span>J-POP</button>
+                    <button class="pref-btn" onclick="togglePref(this)"><span class="pref-emoji">🎸</span>J-ROCK</button>
+                    <button class="pref-btn" onclick="togglePref(this)"><span class="pref-emoji">🎮</span>アニソン</button>
+                    <button class="pref-btn" onclick="togglePref(this)"><span class="pref-emoji">☕</span>R&B</button>
+                    <button class="pref-btn" onclick="togglePref(this)"><span class="pref-emoji">🎧</span>Hip Hop</button>
+                    <button class="pref-btn" onclick="togglePref(this)"><span class="pref-emoji">🎻</span>クラシック</button>
+                </div>
+
+                <input type="hidden" id="genre-input" value="">
+                <input type="hidden" id="artist-input" value="">
+
+                <button class="save-btn" onclick="saveProfile()">設定を適用して戻る</button>
+            </div>
+        </main>
+
+        <div id="bottom-player" class="bottom-player">
+            <div class="bp-content">
+                <img id="bp-art" src="" alt="Album Art" class="bp-art">
+                <div class="bp-info">
+                    <div id="bp-title" class="bp-title">曲名</div>
+                    <div id="bp-artist" class="bp-artist">アーティスト</div>
+                </div>
+                <div class="bp-controls">
+                    <button id="bp-play-btn" class="bp-btn" onclick="toggleBottomPlay()">
+                        <svg id="bp-play-icon" viewBox="0 0 24 24" width="22" height="22"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                    </button>
+                    <button class="bp-btn close-btn" onclick="hideBottomPlayer()">
+                        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/></svg>
+                    </button>
+                </div>
+            </div>
+            <audio id="bottom-audio" ontimeupdate="updateProgress()" onended="onTrackEnded()"></audio>
+            <div class="bp-progress-container" onclick="seekAudio(event)">
+                <div id="bp-progress-bar" class="bp-progress-bar"></div>
+            </div>
+        </div>
+
+        <nav class="nav-bar">
+            <button id="nav-home" class="nav-item active" onclick="switchTab('home')"><span class="nav-icon">🏠</span>ホーム</button>
+            <button id="nav-library" class="nav-item" onclick="switchTab('library')"><span class="nav-icon">📚</span>ライブラリ</button>
+            <button id="nav-profile" class="nav-item" onclick="switchTab('profile')"><span class="nav-icon">👤</span>設定</button>
+        </nav>
+
+        <div id="playlist-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h3>プレイリストに追加</h3>
+                <p class="modal-subtitle" id="modal-song-info">曲名 - アーティスト</p>
+                
+                <div class="modal-section">
+                    <label for="new-playlist-name">新しいプレイリストを作って入れる</label>
+                    <div class="icon-selector" id="modal-icon-selector">
+                        <button class="icon-option active" onclick="selectPlaylistIcon(this, '💿')">💿</button>
+                        <button class="icon-option" onclick="selectPlaylistIcon(this, '🎧')">🎧</button>
+                        <button class="icon-option" onclick="selectPlaylistIcon(this, '✨')">✨</button>
+                        <button class="icon-option" onclick="selectPlaylistIcon(this, '🔥')">🔥</button>
+                        <button class="icon-option" onclick="selectPlaylistIcon(this, '🌙')">🌙</button>
+                        <button class="icon-option" onclick="selectPlaylistIcon(this, '☕')">☕</button>
+                        <button class="icon-option" onclick="selectPlaylistIcon(this, '🚗')">🚗</button>
+                        <button class="icon-option" onclick="selectPlaylistIcon(this, '💤')">💤</button>
+                    </div>
+
+                    <div class="modal-input-group">
+                        <input type="text" id="new-playlist-name" placeholder="プレイリスト名を入力...">
+                        <button class="modal-btn primary" onclick="createNewPlaylistAndAdd()">作成</button>
+                    </div>
+                </div>
+                
+                <div class="modal-section" id="existing-playlists-section" style="display: none;">
+                    <label>既存のプレイリストに送る</label>
+                    <div id="modal-playlist-list" class="modal-playlist-list"></div>
+                </div>
+                
+                <button class="modal-close-btn" onclick="closePlaylistModal()">キャンセル</button>
+            </div>
+        </div>
+
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
