@@ -62,7 +62,7 @@ async function analyzeFeeling() {
 
     try {
         // 💡 バックエンドのAIに天候とシチュエーションのデータも一緒にパス！
-        const response = await fetch("http://127.0.0.1:8000/analyze-emotion", {
+        const response = await fetch("https://feelingmusicapp.onrender.com/analyze-emotion", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
