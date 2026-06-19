@@ -1,0 +1,227 @@
+package com.example.moodtunes;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClient;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Pattern;
+
+@RestController
+@RequestMapping("/analyze-emotion")
+@CrossOrigin(origins = "*") // FastAPIのCORSMiddleware（CORS全面許可）に相当
+public class EmotionController {
+
+    // 🔑 Gemini APIキー
+    private static final String GEMINI_API_KEY = "AQ.Ab8RN6INKMI0AQe0FWjri3PFO_ZMEuJzzsuo_uVEyyu7uZ1loQ";
+    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY;
+
+    private final RestClient restClient = RestClient.create();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // 🛡️ 予備データ用の構造定義
+    private record EmotionData(List<String> keywords, String message) {}
+
+    // EMOTION_MAPの定義
+    private static final Map<String, EmotionData> EMOTION_MAP = Map.of(
+        "楽しい", new EmotionData(List.of("ポップ", "ダンス", "明るい", "爽快"), "最高にウキウキな気分ですね！さらにテンションが上がるような弾けるナンバーをセレクトしました！✨"),
+        "疲れた", new EmotionData(List.of("リラックス", "チル", "アコースティック", "ヒーリング"), "今日もお疲れ様でした。頑張ったあなたを優しく包み込む、心がほっと落ち着く曲たちです。☕"),
+        "悲しい", new EmotionData(List.of("バラード", "泣ける", "しっとり", "切ない"), "無理に元気を出さなくても大丈夫ですよ。あなたの涙や寂しさにそっと寄り添ってくれる、温かい名曲を選びました。☔"),
+        "イライラ", new EmotionData(List.of("ロック", "激しい", "エネルギッシュ", "パンク"), "モヤモヤした気持ち、吹き飛ばしちゃいましょう！爆音で聴いてスッキリできるような曲をどうぞ！⚡"),
+        "緊張", new EmotionData(List.of("クラシック", "ジャズ", "ピアノ", "インスト"), "ドキドキしているあなたへ。深呼吸をひとつして、この心地よい音色に身を委ねてみてくださいね。🍀"),
+        "恋", new EmotionData(List.of("ラブソング", "甘い", "ロマンチック"), "胸がキュンとする素敵なシチュエーションですね！とっておきのラブソングたちです。💕")
+    );
+
+    // 💡 PydanticのEmotionRequestに相当（Javaのrecordで一発定義）
+    public record EmotionRequest(
+        String text,
+        String genre,
+        String favoriteArtist,
+        List<String> genres,
+        List<String> eras,
+        String weather,
+        String situation
+    ) {}
+
+    // フロントに返す曲データの形
+    public record SongDto(String song_title, String artist, String preview_url, String artwork_url, long duration_ms) {}
+
+    @PostMapping
+    public Map<String, Object> analyzeEmotion(@RequestBody EmotionRequest req) {
+        try {
+            // ==========================================
+            // 🤖 パターンA: まずは本物のAI（Gemini）を試す
+            // ==========================================
+            try {
+                System.out.println("🤖 Geminiに考えさせています...");
+
+                String genresStr = req.genres() != null ? String.join(", ", req.genres()) : "指定なし";
+                String erasStr = req.eras() != null ? String.join(", ", req.eras()) : "指定なし";
+                String weatherStr = req.weather() != null && !req.weather().isEmpty() ? req.weather() : "指定なし";
+                String situationStr = req.situation() != null && !req.situation().isEmpty() ? req.situation() : "指定なし";
+
+                // テキストブロック（"""）を使ってプロンプトを綺麗に記述
+                String prompt = String.format("""
+                あなたはユーザーの心に寄り添う、優秀な音楽コンシェルジュです。
+    
+                【ユーザーの現在の状態と好み】
+                ・今の気分: %s
+                ・天候: %s
+                ・シチュエーション: %s
+                ・好きなジャンル: %s
+                ・好きな年代: %s
+    
+                ユーザーは現在「%s」の中で、「%s」というシチュエーションで音楽を聴こうとしています。
+                この状況と気分に最高にマッチする実在する楽曲を3つ選び、iTunes APIで検索しやすいように「アーティスト名 曲名」のキーワードとして出力してください。
+                また、状況に触れた共感できるDJメッセージを考えてください。
+    
+                必ず以下のJSONフォーマットで出力してください。
+                {
+                    "message": "ユーザーへの温かいDJメッセージ",
+                    "search_queries": ["アーティスト名 曲名", "アーティスト名 曲名", "アーティスト名 曲名"]
+                }
+                """, req.text(), weatherStr, situationStr, genresStr, erasStr, weatherStr, situationStr);
+
+                // Gemini APIの公式仕様に合わせたJSONボディの組み立て
+                Map<String, Object> geminiRequestBody = Map.of(
+                    "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt)))),
+                    "generationConfig", Map.of("responseMimeType", "application/json")
+                );
+
+                // HTTP POSTリクエストの送信（Spring Bootの最新手法 RestClient）
+                String geminiRawResponse = restClient.post()
+                        .uri(GEMINI_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(geminiRequestBody)
+                        .retrieve()
+                        .body(String.class);
+
+                // Geminiのレスポンスから内包されたJSONテキストを取り出してパース
+                JsonNode rootNode = objectMapper.readTree(geminiRawResponse);
+                String innerJsonText = rootNode.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
+                JsonNode aiResult = objectMapper.readTree(innerJsonText);
+
+                String djMessage = aiResult.path("message").asText("あなたにぴったりの曲を選びました🎧");
+                List<String> searchQueries = new ArrayList<>();
+                aiResult.path("search_queries").forEach(node -> searchQueries.add(node.asText()));
+
+                System.out.println("✅ Gemini成功！\n💬 " + djMessage);
+
+                // iTunes APIで検索
+                List<SongDto> songsList = new ArrayList<>();
+                for (String query : searchQueries) {
+                    String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+                    String itunesUrl = "https://itunes.apple.com/search?term=" + encodedQuery + "&entity=song&limit=1&country=JP";
+
+                    String itunesResponse = restClient.get().uri(itunesUrl).retrieve().body(String.class);
+                    JsonNode itunesRoot = objectMapper.readTree(itunesResponse);
+
+                    if (itunesRoot.path("resultCount").asInt() > 0) {
+                        JsonNode track = itunesRoot.path("results").get(0);
+                        songsList.add(new SongDto(
+                            track.path("trackName").asText("不明なタイトル"),
+                            track.path("artistName").asText("不明なアーティスト"),
+                            track.path("previewUrl").asText(null),
+                            track.path("artworkUrl100").asText(null),
+                            track.path("trackTimeMillis").asLong(0)
+                        ));
+                    }
+                }
+
+                if (!songsList.isEmpty()) {
+                    return Map.of("message", djMessage, "songs", songsList);
+                }
+
+            } catch (Exception geminiErr) {
+                System.out.println("⚠️ Geminiが制限に達したため、予備システムに切り替えます: " + geminiErr.getMessage());
+            }
+
+            // ==========================================
+            // 🛡️ パターンB: Geminiがダメなら独自アルゴリズム（予備システム）
+            // ==========================================
+            System.out.println("🛡️ 予備システムで選曲を開始します...");
+            String userText = req.text();
+            EmotionData matchedEmotion = null;
+            for (Map.Entry<String, EmotionData> entry : EMOTION_MAP.entrySet()) {
+                if (userText.contains(entry.getKey())) {
+                    matchedEmotion = entry.getValue();
+                    break;
+                }
+            }
+
+            List<String> queryParts = new ArrayList<>();
+            List<String> profileIntroParts = new ArrayList<>();
+            Random random = new Random();
+
+            if (req.genres() != null && !req.genres().isEmpty()) {
+                String chosenGenre = req.genres().get(random.nextInt(req.genres().size()));
+                queryParts.add(chosenGenre);
+                profileIntroParts.add("お好みの " + chosenGenre + " をベースに");
+            }
+
+            if (req.weather() != null && !req.weather().isEmpty()) {
+                String cleanWeather = Pattern.compile("[^\\w\\sぁ-んァ-ン一-龥]").matcher(req.weather()).replaceAll("").trim();
+                if (!cleanWeather.isEmpty()) {
+                    queryParts.add(cleanWeather);
+                }
+                profileIntroParts.add("今の「" + req.weather() + "」の空模様に合わせて");
+            }
+
+            if (req.situation() != null && !req.situation().isEmpty()) {
+                profileIntroParts.add("「" + req.situation() + "」のお供に");
+            }
+
+            String profileIntro = !profileIntroParts.isEmpty() ? String.join("、", profileIntroParts) + "セレクトしました！\n\n" : "";
+            String djMessage;
+
+            if (matchedEmotion != null) {
+                String secretKeyword = matchedEmotion.keywords().get(random.nextInt(matchedEmotion.keywords().size()));
+                queryParts.add(secretKeyword);
+                djMessage = profileIntro + matchedEmotion.message();
+            } else {
+                String subText = userText.length() > 10 ? userText.substring(0, 10) : userText;
+                queryParts.add(subText);
+                djMessage = profileIntro + "「" + userText + "」という今の気分に寄り添う曲を見つけました🎧";
+            }
+
+            String searchQuery = String.join(" ", queryParts).trim();
+            if (searchQuery.isEmpty()) searchQuery = "ヒット曲";
+
+            String encodedQuery = URLEncoder.encode(searchQuery, StandardCharsets.UTF_8);
+            String itunesUrl = "https://itunes.apple.com/search?term=" + encodedQuery + "&entity=song&limit=30&country=JP";
+
+            String itunesResponse = restClient.get().uri(itunesUrl).retrieve().body(String.class);
+            JsonNode itunesRoot = objectMapper.readTree(itunesResponse);
+
+            if (itunesRoot.path("resultCount").asInt() > 0) {
+                List<JsonNode> tracks = new ArrayList<>();
+                itunesRoot.path("results").forEach(tracks::add);
+                Collections.shuffle(tracks); // ランダムシャッフル
+
+                List<JsonNode> selectedTracks = tracks.subList(0, Math.min(tracks.size(), 4));
+                List<SongDto> songsList = new ArrayList<>();
+
+                for (JsonNode track : selectedTracks) {
+                    songsList.add(new SongDto(
+                        track.path("trackName").asText("不明なタイトル"),
+                        track.path("artistName").asText("不明なアーティスト"),
+                        track.path("previewUrl").asText(null),
+                        track.path("artworkUrl100").asText(null),
+                        track.path("trackTimeMillis").asLong(0)
+                    ));
+                }
+                return Map.of("message", djMessage, "songs", songsList);
+            } else {
+                return Map.of("message", "ごめんなさい、今の組み合わせだと曲が見つかりませんでした💦 条件を変えてみてください！", "songs", List.of());
+            }
+
+        } catch (Exception e) {
+            System.out.println("エラー発生: " + e.getMessage());
+            return Map.of("error", "処理に完全に失敗しました💦\n詳細: " + e.getMessage());
+        }
+    }
+}

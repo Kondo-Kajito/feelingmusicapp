@@ -11,9 +11,6 @@ from typing import List
 # Gemini APIを使うためのライブラリ
 import google.generativeai as genai
 
-# ==========================================
-# 🔑 ここに取得したGeminiのAPIキーを貼り付けてください
-# ==========================================
 GEMINI_API_KEY = "AQ.Ab8RN6INKMI0AQe0FWjri3PFO_ZMEuJzzsuo_uVEyyu7uZ1loQ"
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -39,7 +36,8 @@ EMOTION_MAP = {
     "悲しい": {"keywords": ["バラード", "泣ける", "しっとり", "切ない"], "message": "無理に元気を出さなくても大丈夫ですよ。あなたの涙や寂しさにそっと寄り添ってくれる、温かい名曲を選びました。☔"},
     "イライラ": {"keywords": ["ロック", "激しい", "エネルギッシュ", "パンク"], "message": "モヤモヤした気持ち、吹き飛ばしちゃいましょう！爆音で聴いてスッキリできるような曲をどうぞ！⚡"},
     "緊張": {"keywords": ["クラシック", "ジャズ", "ピアノ", "インスト"], "message": "ドキドキしているあなたへ。深呼吸をひとつして、この心地よい音色に身を委ねてみてくださいね。🍀"},
-    "恋": {"keywords": ["ラブソング", "甘い", "ロマンチック"], "message": "胸がキュンとする素敵なシチュエーションですね！とっておきのラブソングたちです。💕"}
+    "恋": {"keywords": ["ラブソング", "甘い", "ロマンチック"], "message": "胸がキュンとする素敵なシチュエーションですね！とっておきのラブソングたちです。💕"},
+    "失恋": {"keywords": ["失恋", "別れ", "泣けるバラード", "切ない"], "message": "辛い思いをしましたね…。今は無理せず、音楽に身を任せて思い切り泣いても大丈夫ですよ。傷ついた心に優しく寄り添う曲を選びました。🌧️"}
 }
 
 class EmotionRequest(BaseModel):
@@ -54,9 +52,9 @@ class EmotionRequest(BaseModel):
 @app.post("/analyze-emotion")
 async def analyze_emotion(req: EmotionRequest):
     try:
-        # ==========================================
-        # 🤖 パターンA: まずは本物のAI（Gemini）を試す
-        # ==========================================
+
+        #  パターンA: まずは本物のAI（Gemini）を試す
+  
         try:
             print("🤖 Geminiに考えさせています...")
             prompt = f"""
@@ -116,9 +114,9 @@ async def analyze_emotion(req: EmotionRequest):
             print(f"⚠️ Geminiが制限に達したため、予備システムに切り替えます: {gemini_err}")
             pass # そのまま下のパターンBへ流れる
 
-        # ==========================================
-        # 🛡️ パターンB: Geminiがダメなら独自アルゴリズム（予備システム）を起動！
-        # ==========================================
+
+        # パターンB: Geminiがダメなら独自アルゴリズム（予備システム）を起動！
+
         print("🛡️ 予備システムで選曲を開始します...")
         user_text = req.text
         matched_emotion = None
