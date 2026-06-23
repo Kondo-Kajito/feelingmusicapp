@@ -9,7 +9,9 @@ function MusicCard({ song, likedSongs = [], toggleLike, onOpenModal, onPlaySong 
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const isLiked = likedSongs.some(likedSong => likedSong.song_title === song.song_title);
+ const isLiked = likedSongs.some(
+    likedSong => likedSong.song_title === song.song_title && likedSong.artist === song.artist
+  );
 
   return (
     <div className="song-card">

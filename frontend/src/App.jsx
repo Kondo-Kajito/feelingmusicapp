@@ -1,5 +1,6 @@
 // src/App.jsx
 import { useState, useRef, useEffect } from 'react';
+import { FiHome, FiBookOpen, FiUser } from "react-icons/fi";
 import MusicCard from './components/MusicCard';
 import ProfileScreen from './components/ProfileScreen';
 import LibraryScreen from './components/LibraryScreen';
@@ -31,13 +32,30 @@ const ALL_QUICK_REPLIES = [
   "季節感のある曲を聴きたい"
 ];
 
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
 function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
-  const [userGenres, setUserGenres] = useState(["J-POP"]);
-  const [userEras, setUserEras] = useState(["90's"]);
-  const [userWeather, setUserWeather] = useState("");
-  const [likedSongs, setLikedSongs] = useState([]);
-  const [playlists, setPlaylists] = useState([]);
+  const [likedSongs, setLikedSongs] = useLocalStorage("mt_liked", []);
+  const [playlists, setPlaylists] = useLocalStorage("mt_playlists", []);
+  const [userGenres, setUserGenres] = useLocalStorage("mt_genres", ["J-POP"]);
+  const [userEras, setUserEras] = useLocalStorage("mt_eras", []);
+  const [userWeather, setUserWeather] = useLocalStorage("mt_weather", "");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
 
@@ -94,14 +112,20 @@ function App() {
   };
 
   const toggleLike = (song) => {
-    const isAlreadyLiked = likedSongs.some(likedSong => likedSong.song_title === song.song_title);
+    // 🌟 修正：曲名とアーティスト名の「両方」が一致するかで厳格に判定する
+    const isAlreadyLiked = likedSongs.some(
+      likedSong => likedSong.song_title === song.song_title && likedSong.artist === song.artist
+    );
+    
     if (isAlreadyLiked) {
-      setLikedSongs(likedSongs.filter(likedSong => likedSong.song_title !== song.song_title));
+      // すでにいいねされている場合は、曲名とアーティスト名が完全一致するものを除外する
+      setLikedSongs(likedSongs.filter(
+        likedSong => !(likedSong.song_title === song.song_title && likedSong.artist === song.artist)
+      ));
     } else {
       setLikedSongs([...likedSongs, song]);
     }
   };
-
   const openModal = (song) => {
     setSelectedSongForPlaylist(song);
     setIsModalOpen(true);
@@ -212,9 +236,16 @@ function App() {
             )}
 
             {isLoading && (
-               <div className="message-wrapper ai">
-                 <div className="avatar-ai">♪</div><div className="message-bubble"><p>考え中...</p></div>
-               </div>
+              <div className="message-wrapper ai">
+                <div className="avatar-ai">♪</div>
+                <div className="message-bubble">
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
             )}
             <div ref={chatEndRef} />
           </div>
@@ -249,13 +280,37 @@ function App() {
       />
 
       <div className="bottom-nav">
-        <div className={`nav-item ${currentScreen === 'home' ? 'active' : ''}`} onClick={() => setCurrentScreen('home')}><span className="nav-icon">🏠</span><span>ホーム</span></div>
-        <div className={`nav-item ${currentScreen === 'library' ? 'active' : ''}`} onClick={() => setCurrentScreen('library')}><span className="nav-icon">📚</span><span>ライブラリ</span></div>
-        <div className={`nav-item ${currentScreen === 'profile' ? 'active' : ''}`} onClick={() => setCurrentScreen('profile')}><span className="nav-icon">👤</span><span>プロフィール</span></div>
+        <div 
+          className={`nav-item ${currentScreen === 'home' ? 'active' : ''}`} 
+          onClick={() => setCurrentScreen('home')}
+        >
+          <FiHome className="nav-icon" />
+          <span>ホーム</span>
+        </div>
+        
+        <div 
+          className={`nav-item ${currentScreen === 'library' ? 'active' : ''}`} 
+          onClick={() => setCurrentScreen('library')}
+        >
+          <FiBookOpen className="nav-icon" />
+          <span>ライブラリ</span>
+        </div>
+        
+        <div 
+          className={`nav-item ${currentScreen === 'profile' ? 'active' : ''}`} 
+          onClick={() => setCurrentScreen('profile')}
+        >
+          <FiUser className="nav-icon" />
+          <span>プロフィール</span>
+        </div>
       </div>
-
       <PlaylistModal 
-        isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} song={selectedSongForPlaylist} playlists={playlists} onCreatePlaylist={createPlaylist} onSaveToPlaylist={saveToPlaylist}
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        song={selectedSongForPlaylist} 
+        playlists={playlists} 
+        onCreatePlaylist={createPlaylist} 
+        onSaveToPlaylist={saveToPlaylist}
       />
     </div>
   );

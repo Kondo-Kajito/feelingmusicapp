@@ -1,5 +1,3 @@
-import React from 'react';
-
 function SearchForm({ text, setText, weather, setWeather, situation, setSituation, handleSearch, isLoading }) {
   return (
     <form onSubmit={handleSearch} className="search-form">

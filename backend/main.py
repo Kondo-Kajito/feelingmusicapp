@@ -54,7 +54,6 @@ async def analyze_emotion(req: EmotionRequest):
     try:
 
         #  パターンA: まずは本物のAI（Gemini）を試す
-  
         try:
             print("🤖 Geminiに考えさせています...")
             prompt = f"""
@@ -67,9 +66,13 @@ async def analyze_emotion(req: EmotionRequest):
             ・好きなジャンル: {', '.join(req.genres) if req.genres else '指定なし'}
             ・好きな年代: {', '.join(req.eras) if req.eras else '指定なし'}
 
-            ユーザーは現在「{req.weather}」の中で、「{req.situation}」というシチュエーションで音楽を聴こうとしています。
-            この状況と気分に最高にマッチする実在する楽曲を3つ選び、iTunes APIで検索しやすいように「アーティスト名 曲名」のキーワードとして出力してください。
-            また、状況に触れた共感できるDJメッセージを考えてください。
+            【選曲の絶対条件】
+            1. 指定された「好きな年代」にリリースされた、またはその年代を代表する楽曲を必ず選ぶこと。
+            2. 指定された「好きなジャンル」に合致する楽曲を選ぶこと。
+            3. 今の「天候」や「気分」にぴったり合う楽曲を選ぶこと。
+
+            この条件に最高にマッチする実在する楽曲を3つ選び、iTunes APIで検索しやすいように「アーティスト名 曲名」のキーワードとして出力してください。
+            また、選んだ曲が指定された年代や天候にどう合っているかに触れた、ユーザーが嬉しくなるようなDJメッセージを考えてください。
 
             必ず以下のJSONフォーマットで出力してください。
             {{
@@ -110,13 +113,11 @@ async def analyze_emotion(req: EmotionRequest):
                 }
                 
         except Exception as gemini_err:
-            # もしGeminiが利用制限(429)などでエラーになったら、ここでキャッチ！
             print(f"⚠️ Geminiが制限に達したため、予備システムに切り替えます: {gemini_err}")
-            pass # そのまま下のパターンBへ流れる
+            pass 
 
 
         # パターンB: Geminiがダメなら独自アルゴリズム（予備システム）を起動！
-
         print("🛡️ 予備システムで選曲を開始します...")
         user_text = req.text
         matched_emotion = None
@@ -133,10 +134,20 @@ async def analyze_emotion(req: EmotionRequest):
             query_parts.append(chosen_genre)
             profile_intro_parts.append(f"お好みの {chosen_genre} をベースに")
 
+        # 🌟 追加：年代（eras）の処理をしっかり追加！
+        if req.eras:
+            chosen_era = random.choice(req.eras)
+            era_jp = chosen_era.replace("'s", "年代") # 90's を 90年代 に変換
+            query_parts.append(era_jp)
+            profile_intro_parts.append(f"懐かしの「{chosen_era}」の名曲から")
+
         if req.weather:
             clean_weather = re.sub(r'[^\w\sぁ-んァ-ン一-龥]', '', req.weather).strip()
             if clean_weather:
-                query_parts.append(clean_weather)
+                # 🌟 改善：天気をそのまま検索すると曲名に「雨」が入る曲しか出ないので、雰囲気に変換
+                if "晴れ" in clean_weather: query_parts.append("爽快")
+                elif "雨" in clean_weather: query_parts.append("しっとり")
+                elif "曇り" in clean_weather: query_parts.append("チル")
             profile_intro_parts.append(f"今の「{req.weather}」の空模様に合わせて")
             
         if req.situation:

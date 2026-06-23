@@ -1,30 +1,48 @@
 /* src/App.css - MOODTUNES AI 風 ダークテーマ */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
+/* =========================================
+   🌟 1. 全体のレイアウト（スマホ特化）
+========================================= */
 body {
   margin: 0;
-  background: linear-gradient(180deg, #1c1535 0%, #0d081b 100%);
+  padding: 0;
+  background-color: #000; /* PCで見た時の外側の背景色（黒） */
   color: #e6e0f8;
   font-family: 'Noto Sans JP', sans-serif;
-  height: 100vh;
   display: flex;
   justify-content: center;
 }
 
 .chat-app-container {
   width: 100vw;
-  max-width: 400px;
+  max-width: 480px; /* PCで見てもスマホサイズに固定 */
   height: 100vh;
+  height: 100dvh; /* 🌟 iPhoneのアドレスバーが出ても画面ぴったりに合わせる */
+  background: linear-gradient(180deg, #1c1535 0%, #0d081b 100%); /* アプリの背景 */
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* 画面全体がスクロールしてしまうのを防ぐ */
   box-shadow: 0 0 30px rgba(0,0,0,0.5);
 }
 
 .header {
-  padding: 20px 20px 10px;
+  position: absolute; /* 👈 画面の一番上に固定して浮かせます */
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px 20px 15px;
+  box-sizing: border-box;
+  /* すりガラス用の半透明背景 */
+  background: rgba(28, 21, 53, 0.7); 
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  /* 下部にほんのり見えるおしゃれな区切り線 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+  z-index: 15; /* メッセージより上に重ねる */
 }
+
 .header-subtitle {
   font-size: 10px;
   letter-spacing: 2px;
@@ -32,6 +50,7 @@ body {
   margin: 0 0 5px 0;
   font-weight: 500;
 }
+
 .header-title {
   font-size: 18px;
   font-weight: 500;
@@ -39,25 +58,31 @@ body {
   color: #ffffff;
 }
 
+/* =========================================
+   🌟 2. チャットエリアのスクロール調整
+========================================= */
 .chat-history {
   flex: 1;
   overflow-y: auto;
-  padding: 0 20px 20px;
+  /* 入力欄（約70px）＋下メニュー（約60px）に被らないように下の余白をガッツリ取る */
+  padding: 0 20px 140px; 
+  padding-top: 85px;
   display: flex;
   flex-direction: column;
-  /* スクロールバー非表示 */
   -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: none; /* スクロールバーを隠す（Android用） */
 }
 .chat-history::-webkit-scrollbar {
-  display: none;
+  display: none; /* スクロールバーを隠す（iPhone用） */
 }
 
-/* =========================================
-   🌟 チャットメッセージのデザイン（ここが大きく変わりました！）
-========================================= */
+/* ミニプレイヤーが出た時はさらに余白を増やす */
+.chat-history.with-mini-player {
+  padding-bottom: 215px; 
+  transition: padding-bottom 0.3s ease-out;
+}
 
-/* メッセージ全体を包む枠 */
+/* --- チャットメッセージのデザイン --- */
 .message-wrapper {
   display: flex;
   align-items: flex-start;
@@ -65,18 +90,12 @@ body {
   margin-bottom: 20px;
   width: 100%;
 }
-
-/* AIのメッセージ（左寄せ） */
 .message-wrapper.ai {
   justify-content: flex-start;
 }
-
-/* 自分のメッセージ（右寄せ） */
 .message-wrapper.user {
   justify-content: flex-end;
 }
-
-/* AIのアイコン */
 .avatar-ai {
   width: 40px;
   height: 40px;
@@ -90,35 +109,25 @@ body {
   box-shadow: 0 0 15px rgba(152, 120, 255, 0.4);
   flex-shrink: 0;
 }
-
-/* アバターと吹き出しをまとめる枠 */
 .message-content-group {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 80%; /* 画面の80%までしか広がらないようにする */
+  max-width: 80%; 
 }
-
-/* 吹き出しの共通デザイン */
 .message-bubble {
   padding: 12px 16px;
   font-size: 14px;
   line-height: 1.5;
-  width: fit-content; /* 文字の長さに応じてピッタリ広がる */
-  
-  /* 長すぎる文章を綺麗に改行する魔法のコード */
+  width: fit-content; 
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
   white-space: pre-wrap;
 }
-
-/* 吹き出しの中の余計な隙間を消す */
 .message-bubble p {
   margin: 0;
 }
-
-/* AIの吹き出しカラーと形（左下を尖らせる） */
 .message-bubble.ai {
   background-color: #1f1836;
   border: 1px solid #2d244a;
@@ -126,8 +135,6 @@ body {
   border-radius: 18px 18px 18px 4px;
   align-self: flex-start;
 }
-
-/* 自分の吹き出しカラーと形（右寄せ＆右下を尖らせる） */
 .message-bubble.user {
   background-color: #9878ff;
   border: 1px solid #9878ff;
@@ -137,70 +144,53 @@ body {
   align-self: flex-end;
 }
 
-/* ========================================= */
-
-.suggest-section {
-  margin-top: 10px;
-}
-.suggest-label {
-  font-size: 12px;
-  color: #726496;
-  margin-bottom: 12px;
-}
-.suggest-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.suggest-chip {
-  background: transparent;
-  border: 1px solid #3c315e;
-  color: #e6e0f8;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.suggest-chip:hover {
-  background: rgba(152, 120, 255, 0.1);
-  border-color: #6a53a3;
-}
-
+/* =========================================
+   🌟 3. 入力エリア（フローティングナビに合わせて位置調整版）
+========================================= */
 .input-area-wrapper {
+  position: absolute;
+  bottom: 90px; /* 👈 新しいメニューが浮いた分、60pxから90pxに上げました */
+  width: 100%;
   padding: 10px 20px;
-  background: transparent; 
-  padding-bottom: 70px;
+  box-sizing: border-box;
+  /* メッセージが後ろを透けて通るように、下から上へ黒いグラデーションをかける */
+  background: linear-gradient(to top, rgba(13, 8, 27, 1) 60%, rgba(13, 8, 27, 0));
+  z-index: 10;
+  transition: bottom 0.3s ease-out;
+}
+
+/* ミニプレイヤーが出たら一緒に上に逃げる */
+.input-area-wrapper.with-mini-player {
+  bottom: 165px; /* 👈 135pxから165pxに上げました */
+  transform: none; 
 }
 
 .input-form {
   display: flex;
   align-items: center;
-  background-color: #1a142c;
+  background-color: rgba(26, 20, 44, 0.85); /* 少し透けさせる */
+  backdrop-filter: blur(8px); /* すりガラス効果 */
   border: 1px solid #2d244a;
   border-radius: 24px;
   padding: 5px 15px;
 }
-
 .input-icon {
   color: #6a5c92;
   font-size: 16px;
   margin-right: 10px;
 }
-
 .input-form input {
   flex: 1;
   background: transparent;
   border: none;
   color: white;
-  font-size: 14px;
+  font-size: 16px; /* 🌟 iPhoneで勝手にズームされないように16pxに固定！ */
   padding: 12px 0;
   outline: none;
 }
 .input-form input::placeholder {
   color: #6a5c92;
 }
-
 .send-button {
   background: transparent;
   border: none;
@@ -216,298 +206,179 @@ body {
   color: #9878ff;
 }
 
+/* =========================================
+   🌟 4. 下部ナビゲーション（おしゃれなフローティング仕様）
+========================================= */
 .bottom-nav {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  background-color: #0b0713;
+  /* 画面の下から少し浮かせる */
+  bottom: calc(15px + env(safe-area-inset-bottom, 0px)); 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%; /* 画面幅の90%にして左右に余白を作る */
+  max-width: 380px;
+  height: 65px;
+  /* すりガラス風の半透明背景 */
+  background: rgba(30, 24, 54, 0.75); 
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  /* おしゃれな枠線と影 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 35px; /* 完全な丸みを持たせる */
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  border-top: 1px solid #1c1535;
+  z-index: 20;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  padding: 0 10px;
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #554877;
+  justify-content: center;
+  color: #6a5c92;
   font-size: 10px;
+  font-weight: 500;
   cursor: pointer;
   gap: 4px;
-}
-.nav-item.active {
-  color: #d8b4ff;
-}
-.nav-icon {
-  font-size: 20px;
-}
-
-.songs-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.song-card {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  background: #1a142c;
-  border-radius: 12px;
-  margin-bottom: 10px;
-}
-
-.song-card .artwork {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.song-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #8c7fb5;
-}
-
-.duration {
-  font-size: 13px;
-  letter-spacing: 0.5px;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  color: #8c7fb5;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s;
-}
-
-.icon-btn:hover {
-  color: #d8b4ff;
-}
-
-.profile-screen {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  padding-bottom: 80px;
-}
-
-.profile-content {
-  padding: 0 20px;
-}
-
-.profile-desc {
-  font-size: 13px;
-  color: #8c7fb5;
-  line-height: 1.6;
-  margin-bottom: 30px;
-}
-
-.setting-section {
-  margin-bottom: 30px;
-}
-
-.section-title {
-  font-size: 14px;
-  color: #ffffff;
-  margin-bottom: 15px;
-  font-weight: 500;
-  border-bottom: 1px solid #2d244a;
-  padding-bottom: 8px;
-}
-
-.chip-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.toggle-chip {
-  background: transparent;
-  border: 1px solid #4a3a7d;
-  color: #e6e0f8;
-  padding: 10px 18px;
+  width: 65px;
+  height: 50px;
   border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.toggle-chip.active {
-  background: rgba(152, 120, 255, 0.2);
-  border-color: #9878ff;
+/* 🌟 選択中（アクティブ）の時の光るエフェクト */
+.nav-item.active {
+  background: rgba(152, 120, 255, 0.15); /* ふんわり光る背景 */
   color: #ffffff;
-  box-shadow: 0 0 10px rgba(152, 120, 255, 0.3);
+  transform: translateY(-4px); /* 少し上にポコっと浮き上がる */
+  box-shadow: 0 4px 15px rgba(152, 120, 255, 0.2);
 }
 
-.modal-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
-  display: flex;
-  align-items: flex-end;
-  animation: fadeIn 0.2s ease-out;
+.nav-icon {
+  font-size: 22px;
+  transition: all 0.3s ease;
 }
 
-.modal-content {
-  width: 100%;
-  background-color: #1f1836;
-  border-radius: 24px 24px 0 0;
-  padding: 25px 20px 40px;
-  box-sizing: border-box;
-  animation: slideUp 0.3s cubic-bezier(0.1, 0.8, 0.3, 1);
-  box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-  max-height: 85vh;
+.nav-item.active .nav-icon {
+  filter: drop-shadow(0 0 8px rgba(216, 180, 255, 0.8)); /* アイコン自体をネオンのように光らせる */
+}
+
+/* =========================================
+   音楽カード・ライブラリ・プロフィールのスタイル
+========================================= */
+.songs-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.song-card { display: flex; align-items: center; padding: 10px; background: #1a142c; border-radius: 12px; margin-bottom: 10px; }
+.song-card .artwork { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.song-actions { display: flex; align-items: center; gap: 12px; color: #8c7fb5; }
+.duration { font-size: 13px; letter-spacing: 0.5px; }
+.icon-btn { background: none; border: none; color: #8c7fb5; font-size: 18px; cursor: pointer; padding: 0; display: flex; align-items: center; transition: color 0.2s; }
+.icon-btn:hover { color: #d8b4ff; }
+
+/* =========================================
+   🌟 ハートを赤く染めて光らせる（UI強化）
+========================================= */
+
+/* ハートアイコン（いいねボタン）のベース設定（すでにApp.cssにあるかもしれませんが、無ければ追加・上書きしてください） */
+.heart {
+  color: #554877; /* 通常時の色（少し暗めの紫など） */
+  transition: all 0.2s ease; /* 0.2秒かけて滑らかに色を変える */
+}
+
+/* 🌟 いいねされている状態（likedクラスが付いた時）のハート */
+.heart.liked {
+  color: #ff3b3b !important; /* 👈 Apple Musicのような鮮やかな赤！ !importantで確実に適用 */
+  filter: drop-shadow(0 0 5px rgba(255, 59, 59, 0.7)); /* 👈 赤い光（ネオン）を纏わせて、ダークテーマで映えるように */
+  animation: heartPulse 0.3s ease-out; /* 👈 押した瞬間ポンッと動くアニメーション */
+}
+
+/* 🌟 ライブラリ画面（.library-itemの中）にあるハートにも同じ赤を適用 */
+.library-item .heart.liked {
+  color: #ff3b3b !important;
+  filter: drop-shadow(0 0 5px rgba(255, 59, 59, 0.5));
+}
+
+/* 💡 こだわりポイント：押した時のプチ・アニメーション定義 */
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); } /* 🌟 一瞬大きくなる */
+  100% { transform: scale(1); }
+}
+
+/* 🌟 ライブラリとプロフィールも下メニューに被らないように余白を追加 */
+.library-screen { 
+  padding: 20px 20px 100px; /* 下部余白追加 */
+  color: #fff; 
+  flex: 1;
   overflow-y: auto;
 }
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.profile-screen { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  overflow-y: auto; 
+  padding: 20px 20px 100px; /* 下部余白追加 */
 }
 
-.modal-title {
-  margin: 0;
-  font-size: 16px;
-  color: #fff;
-  font-weight: 500;
-}
-
-.close-btn {
-  background: none; border: none; color: #8c7fb5;
-  font-size: 20px; cursor: pointer; padding: 0;
-}
-
-.modal-song-info {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  background-color: #1a142c;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 25px;
-}
-
-.modal-artwork {
-  width: 40px; height: 40px; border-radius: 6px;
-}
-
-.modal-song-title {
-  font-size: 14px; color: #fff; font-weight: 500; margin-bottom: 3px;
-}
-.modal-artist {
-  font-size: 12px; color: #8c7fb5;
-}
-
-.section-label {
-  font-size: 12px; color: #8c7fb5; margin: 0 0 10px 0; font-weight: normal;
-}
-
-.create-playlist-section {
-  margin-bottom: 25px;
-}
-
-.icon-selector {
-  display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px;
-}
-
-.icon-option {
-  background: #2d244a; border: 1px solid transparent; border-radius: 50%;
-  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-  font-size: 18px; cursor: pointer; flex-shrink: 0;
-  transition: all 0.2s;
-}
-
-.icon-option.selected {
-  background: #4a3a7d; border-color: #d8b4ff; box-shadow: 0 0 10px rgba(216,180,255,0.3);
-}
-
-.input-row {
-  display: flex; gap: 10px;
-}
-
-.input-row input {
-  flex: 1; background: #1a142c; border: 1px solid #2d244a; border-radius: 12px;
-  padding: 12px 15px; color: #fff; font-size: 14px; outline: none;
-}
-
-.create-btn {
-  background: #9878ff; border: none; color: #fff; border-radius: 12px;
-  padding: 0 15px; font-weight: 500; cursor: pointer; font-size: 13px;
-}
-.create-btn:disabled {
-  background: #4a3a7d; color: #8c7fb5;
-}
-
-.playlist-list {
-  display: flex; flex-direction: column; gap: 10px;
-}
-
-.playlist-item-btn {
-  display: flex; align-items: center; background: #2d244a; border: none;
-  padding: 12px 15px; border-radius: 12px; cursor: pointer; color: #fff;
-  transition: background 0.2s;
-}
-.playlist-item-btn:not(:disabled):hover { background: #3c315e; }
-.playlist-item-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.playlist-icon { font-size: 18px; margin-right: 12px; }
-.playlist-name { flex: 1; text-align: left; font-size: 14px; }
-.playlist-status { font-size: 12px; color: #8c7fb5; }
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.library-screen { padding: 20px; color: #fff; }
 .screen-title { font-size: 24px; margin-bottom: 20px; }
 .section { margin-bottom: 30px; }
 .section-title { font-size: 18px; color: #8c7fb5; margin-bottom: 10px; }
 .empty-msg { color: #555; font-size: 14px; }
-
-.library-item {
-  display: flex; align-items: center; gap: 15px;
-  background: #1a142c; padding: 10px; border-radius: 12px; margin-bottom: 8px;
-}
+.library-item { display: flex; align-items: center; gap: 15px; background: #1a142c; padding: 10px; border-radius: 12px; margin-bottom: 8px; }
 .artwork-small { width: 50px; height: 50px; border-radius: 8px; }
-.info { flex: 1; }
-.title { font-size: 14px; }
-.artist { font-size: 12px; color: #8c7fb5; }
 
-.playlist-card {
-  background: #2d244a; padding: 15px; border-radius: 16px; margin-bottom: 15px;
-}
+.playlist-card { background: #2d244a; padding: 15px; border-radius: 16px; margin-bottom: 15px; }
 .playlist-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .playlist-header .icon { font-size: 20px; }
 .playlist-header .name { font-weight: bold; flex: 1; }
 .playlist-header .count { font-size: 12px; color: #8c7fb5; }
 .small-song-item { font-size: 12px; color: #d0c8e0; margin-left: 30px; margin-bottom: 4px; }
 
+.profile-desc { font-size: 13px; color: #8c7fb5; line-height: 1.6; margin-bottom: 30px; }
+.setting-section { margin-bottom: 30px; }
+.section-title { font-size: 14px; color: #ffffff; margin-bottom: 15px; font-weight: 500; border-bottom: 1px solid #2d244a; padding-bottom: 8px; }
+.chip-container { display: flex; flex-wrap: wrap; gap: 10px; }
+.toggle-chip { background: transparent; border: 1px solid #4a3a7d; color: #e6e0f8; padding: 10px 18px; border-radius: 20px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+.toggle-chip.active { background: rgba(152, 120, 255, 0.2); border-color: #9878ff; color: #ffffff; box-shadow: 0 0 10px rgba(152, 120, 255, 0.3); }
+
+/* =========================================
+   モーダル（プレイリスト追加画面）
+========================================= */
+.modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; display: flex; align-items: flex-end; animation: fadeIn 0.2s ease-out; }
+.modal-content { width: 100%; background-color: #1f1836; border-radius: 24px 24px 0 0; padding: 25px 20px 40px; box-sizing: border-box; animation: slideUp 0.3s cubic-bezier(0.1, 0.8, 0.3, 1); box-shadow: 0 -5px 20px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-title { margin: 0; font-size: 16px; color: #fff; font-weight: 500; }
+.close-btn { background: none; border: none; color: #8c7fb5; font-size: 20px; cursor: pointer; padding: 0; }
+.modal-song-info { display: flex; gap: 15px; align-items: center; background-color: #1a142c; padding: 12px; border-radius: 12px; margin-bottom: 25px; }
+.modal-artwork { width: 40px; height: 40px; border-radius: 6px; }
+.modal-song-title { font-size: 14px; color: #fff; font-weight: 500; margin-bottom: 3px; }
+.modal-artist { font-size: 12px; color: #8c7fb5; }
+.section-label { font-size: 12px; color: #8c7fb5; margin: 0 0 10px 0; font-weight: normal; }
+.create-playlist-section { margin-bottom: 25px; }
+.icon-selector { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+.icon-option { background: #2d244a; border: 1px solid transparent; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+.icon-option.selected { background: #4a3a7d; border-color: #d8b4ff; box-shadow: 0 0 10px rgba(216,180,255,0.3); }
+.input-row { display: flex; gap: 10px; }
+.input-row input { flex: 1; background: #1a142c; border: 1px solid #2d244a; border-radius: 12px; padding: 12px 15px; color: #fff; font-size: 14px; outline: none; }
+.create-btn { background: #9878ff; border: none; color: #fff; border-radius: 12px; padding: 0 15px; font-weight: 500; cursor: pointer; font-size: 13px; }
+.create-btn:disabled { background: #4a3a7d; color: #8c7fb5; }
+.playlist-list { display: flex; flex-direction: column; gap: 10px; }
+.playlist-item-btn { display: flex; align-items: center; background: #2d244a; border: none; padding: 12px 15px; border-radius: 12px; cursor: pointer; color: #fff; transition: background 0.2s; }
+.playlist-item-btn:not(:disabled):hover { background: #3c315e; }
+.playlist-item-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.playlist-icon { font-size: 18px; margin-right: 12px; }
+.playlist-name { flex: 1; text-align: left; font-size: 14px; }
+.playlist-status { font-size: 12px; color: #8c7fb5; }
+
+/* =========================================
+   ミニプレイヤー
+========================================= */
 .mini-player {
   position: absolute;
-  bottom: 60px;
+  /* 🌟 下部ナビゲーションの高さ＋iPhoneの安全領域を避けて浮かす */
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px)); 
   left: 10px;
   right: 10px;
   background-color: #2d244a;
@@ -521,150 +392,106 @@ body {
   z-index: 100;
   animation: slideUpMiniPlayer 0.3s ease-out;
 }
+.mini-player-actions { display: flex; align-items: center; gap: 15px; }
+.play-pause-btn { background-color: #d8b4ff; color: #1a142c; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; }
+.play-pause-btn:active { transform: scale(0.9); }
 
-@keyframes slideUpMiniPlayer {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
+/* 文字の省略設定（...） */
+.song-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.song-text { flex: 1; min-width: 0; }
+.song-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+.artist-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: #8c7fb5; }
 
-.mini-player-actions {
+.mini-player-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.mini-artwork { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+.mini-text { flex: 1; min-width: 0; }
+.mini-title { color: #fff; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-artist { color: #8c7fb5; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.library-item .info { flex: 1; min-width: 0; }
+.library-item .title, .library-item .artist { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* クイックリプライボタン */
+.quick-replies-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 5px 20px 15px 56px; animation: fadeIn 0.4s ease-out; }
+.quick-reply-btn { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); color: #e6e0f8; padding: 7px 14px; border-radius: 18px; font-size: 13px; font-weight: 400; cursor: pointer; transition: all 0.2s ease; }
+.quick-reply-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: #8c7fb5; }
+.quick-reply-btn:active { transform: scale(0.96); }
+
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUpMiniPlayer { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* =========================================
+   🌟 AIの「考え中...」波打ちアニメーション（Typing Indicator）
+========================================= */
+.typing-indicator {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 6px;
+  padding: 8px 4px;
 }
 
-.play-pause-btn {
-  background-color: #d8b4ff;
-  color: #1a142c;
-  border: none;
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background-color: #9878ff; /* メニューと同じ、光るおしゃれなパープル */
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.1s;
+  display: inline-block;
+  /* bounceアニメーションを1.4秒かけて無限に繰り返す */
+  animation: waveBounce 1.4s infinite ease-in-out both;
 }
 
-.play-pause-btn:active {
-  transform: scale(0.9);
+/* 1番目、2番目、3番目のドットの動くタイミングを少しずつズラす */
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
 }
 
-.input-area-wrapper.with-mini-player {
-  transform: translateY(-75px);
-  transition: transform 0.3s ease-out;
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
 }
 
-.chat-history.with-mini-player {
-  padding-bottom: 75px; 
-  transition: padding-bottom 0.3s ease-out;
+/* ポンポンと跳ねながら、透明度も変わるリッチなエフェクト */
+@keyframes waveBounce {
+  0%, 80%, 100% { 
+    transform: scale(0.6);
+    opacity: 0.3;
+  } 
+  40% { 
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 
-/* 枠からはみ出ないようにする省略設定 */
-.song-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0; 
-}
-.song-text {
-  flex: 1;
-  min-width: 0;
-}
-.song-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 14px;
-  font-weight: 500;
-  color: #fff;
-  margin-bottom: 4px;
-}
-.artist-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-  color: #8c7fb5;
+/* =========================================
+   🌟 メッセージや曲が「フワッ」と出るアニメーション
+========================================= */
+
+/* ① メッセージ全体をフワッと出す */
+.message-wrapper {
+  /* 0.4秒かけて、下から上にイージングを効かせて表示 */
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.mini-player-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-}
-.mini-artwork {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-.mini-text {
-  flex: 1;
-  min-width: 0;
-}
-.mini-title {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.mini-artist {
-  color: #8c7fb5;
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* ② AIが提案する曲カードは、テキストより一瞬遅らせて出す（超リッチ演出） */
+.songs-container {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.25s; /* 0.25秒だけわざと遅らせる */
 }
 
-.library-item .info {
-  flex: 1;
-  min-width: 0;
-}
-.library-item .title,
-.library-item .artist {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-/* --- 追加：クイックリプライボタンのスタイル --- */
+/* ③ 最初のクイックリプライ（選択肢ボタン）もフワッと出す */
 .quick-replies-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 5px 20px 15px 56px; /* AIアバターの横幅に合わせた左余白 */
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.15s;
 }
 
-.quick-reply-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e6e0f8;
-  padding: 7px 14px;
-  border-radius: 18px;
-  font-size: 13px;
-  font-weight: 400;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.quick-reply-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #8c7fb5;
-}
-
-.quick-reply-btn:active {
-  transform: scale(0.96);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+/* 👆 上記すべてで使う「下から浮き上がる動き」の定義 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px); /* 24px下からスタート */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);    /* 本元の位置へ */
+  }
 }
