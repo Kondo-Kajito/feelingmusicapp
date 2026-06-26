@@ -7,13 +7,22 @@ import json
 import random
 import re
 from typing import List
+import os
+from dotenv import load_dotenv
 
 # Gemini APIを使うためのライブラリ
 import google.generativeai as genai
 
-GEMINI_API_KEY = "AQ.Ab8RN6INKMI0AQe0FWjri3PFO_ZMEuJzzsuo_uVEyyu7uZ1loQ"
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
+if not GEMINI_API_KEY:
+    print("⚠️ GEMINI_API_KEYが設定されていません。Geminiを使った選曲はできません。")
+
+else:
+    genai.configure(api_key=GEMINI_API_KEY)
+    
 model = genai.GenerativeModel(
     'gemini-2.0-flash',
     generation_config={"response_mime_type": "application/json"}
