@@ -1,5 +1,14 @@
 // src/components/ProfileScreen.jsx
-function ProfileScreen({ userGenres, setUserGenres, userEras, setUserEras, userWeather, setUserWeather }) {
+function ProfileScreen({
+  user,
+  onLogout,
+  userGenres,
+  setUserGenres,
+  userEras,
+  setUserEras,
+  userWeather,
+  setUserWeather,
+}) {
   // 選択肢のリスト
   const availableGenres = ["J-POP", "K-POP", "洋楽", "Rock", "R&B", "HipHop", "アニソン", "クラシック", "ジャズ"];
   const availableEras = ["80's", "90's", "2000's", "2010's", "2020's"];
@@ -30,6 +39,17 @@ function ProfileScreen({ userGenres, setUserGenres, userEras, setUserEras, userW
       </div>
 
       <div className="profile-content">
+        <div className="profile-user-card">
+          <div className="profile-avatar">{user.display_name.charAt(0).toUpperCase()}</div>
+          <div className="profile-user-info">
+            <p className="profile-user-name">{user.display_name}</p>
+            <p className="profile-user-id">@{user.username}</p>
+          </div>
+          <button type="button" className="logout-btn" onClick={onLogout}>
+            ログアウト
+          </button>
+        </div>
+
         <p className="profile-desc">
           AIが選曲する際のヒントになります。<br/>
           好きなものをいくつでも選んでください。

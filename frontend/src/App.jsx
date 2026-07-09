@@ -6,6 +6,8 @@ import ProfileScreen from './components/ProfileScreen';
 import LibraryScreen from './components/LibraryScreen';
 import PlaylistModal from './components/PlaylistModal';
 import MiniPlayer from './components/MiniPlayer';
+import LoginScreen from './components/LoginScreen';
+import { API_BASE_URL, AUTH_TOKEN_KEY } from './config';
 import './App.css'; 
 
 // 🌟 参考文章の全選択肢リスト
@@ -32,10 +34,12 @@ const ALL_QUICK_REPLIES = [
   "季節感のある曲を聴きたい"
 ];
 
-function useLocalStorage(key, initialValue) {
+function useUserLocalStorage(baseKey, userId, initialValue) {
+  const storageKey = userId ? `${baseKey}_${userId}` : baseKey;
+
   const [value, setValue] = useState(() => {
     try {
-      const item = window.localStorage.getItem(key);
+      const item = window.localStorage.getItem(storageKey);
       return item ? JSON.parse(item) : initialValue;
     } catch {
       return initialValue;
@@ -43,19 +47,32 @@ function useLocalStorage(key, initialValue) {
   });
 
   useEffect(() => {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  }, [key, value]);
+    if (!userId) return;
+    try {
+      const item = window.localStorage.getItem(storageKey);
+      setValue(item ? JSON.parse(item) : initialValue);
+    } catch {
+      setValue(initialValue);
+    }
+  }, [storageKey, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    window.localStorage.setItem(storageKey, JSON.stringify(value));
+  }, [storageKey, value, userId]);
 
   return [value, setValue];
 }
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [currentScreen, setCurrentScreen] = useState('home');
-  const [likedSongs, setLikedSongs] = useLocalStorage("mt_liked", []);
-  const [playlists, setPlaylists] = useLocalStorage("mt_playlists", []);
-  const [userGenres, setUserGenres] = useLocalStorage("mt_genres", ["J-POP"]);
-  const [userEras, setUserEras] = useLocalStorage("mt_eras", []);
-  const [userWeather, setUserWeather] = useLocalStorage("mt_weather", "");
+  const [likedSongs, setLikedSongs] = useUserLocalStorage("mt_liked", user?.id, []);
+  const [playlists, setPlaylists] = useUserLocalStorage("mt_playlists", user?.id, []);
+  const [userGenres, setUserGenres] = useUserLocalStorage("mt_genres", user?.id, ["J-POP"]);
+  const [userEras, setUserEras] = useUserLocalStorage("mt_eras", user?.id, []);
+  const [userWeather, setUserWeather] = useUserLocalStorage("mt_weather", user?.id, "");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSongForPlaylist, setSelectedSongForPlaylist] = useState(null);
 
@@ -86,6 +103,38 @@ function App() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, currentScreen]);
+
+  useEffect(() => {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (!token) {
+      setAuthLoading(false);
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("invalid token");
+        return response.json();
+      })
+      .then((data) => setUser(data))
+      .catch(() => localStorage.removeItem(AUTH_TOKEN_KEY))
+      .finally(() => setAuthLoading(false));
+  }, []);
+
+  const handleLoginSuccess = (loggedInUser) => {
+    setUser(loggedInUser);
+    setCurrentScreen('home');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    setUser(null);
+    setCurrentScreen('home');
+    setCurrentSong(null);
+    setIsPlaying(false);
+  };
 
   const handlePlaySong = (song) => {
     if (!song.preview_url) {
@@ -157,7 +206,7 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://feelingmusicapp.onrender.com/analyze-emotion', {
+      const response = await fetch(`${API_BASE_URL}/analyze-emotion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -176,6 +225,22 @@ function App() {
       setIsLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="chat-app-container auth-loading">
+        <div className="auth-loading-text">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="chat-app-container">
+        <LoginScreen onLoginSuccess={handleLoginSuccess} />
+      </div>
+    );
+  }
 
   return (
     <div className="chat-app-container">
@@ -266,6 +331,8 @@ function App() {
 
       {currentScreen === 'profile' && (
         <ProfileScreen 
+          user={user}
+          onLogout={handleLogout}
           userGenres={userGenres} setUserGenres={setUserGenres} userEras={userEras} setUserEras={setUserEras} userWeather={userWeather} setUserWeather={setUserWeather}
         />
       )}

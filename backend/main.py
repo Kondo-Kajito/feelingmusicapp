@@ -1,6 +1,18 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from auth import (
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    UserResponse,
+    authenticate_user,
+    create_access_token,
+    get_current_user,
+    init_db,
+    register_user,
+)
 import urllib.request
 import urllib.parse
 import json
@@ -29,6 +41,7 @@ model = genai.GenerativeModel(
 )
 
 app = FastAPI()
+init_db()
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +70,26 @@ class EmotionRequest(BaseModel):
     eras: List[str] = []
     weather: str = ""
     situation: str = ""
+
+
+@app.post("/auth/register", response_model=AuthResponse)
+async def auth_register(req: RegisterRequest):
+    user = register_user(req)
+    token = create_access_token(user.id, user.username)
+    return AuthResponse(access_token=token, user=user)
+
+
+@app.post("/auth/login", response_model=AuthResponse)
+async def auth_login(req: LoginRequest):
+    user = authenticate_user(req.username, req.password)
+    token = create_access_token(user.id, user.username)
+    return AuthResponse(access_token=token, user=user)
+
+
+@app.get("/auth/me", response_model=UserResponse)
+async def auth_me(current_user: UserResponse = Depends(get_current_user)):
+    return current_user
+
 
 @app.post("/analyze-emotion")
 async def analyze_emotion(req: EmotionRequest):
