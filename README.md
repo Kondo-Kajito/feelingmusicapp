@@ -73,26 +73,26 @@
 4. **ブラウザで確認** ターミナルに表示されるURL（ http://localhost:5173 など）にアクセスするとアプリが起動します。
 
 
-## (６)ディレクトリ構成
+### (6)ディレクトリ構成
 .
-├── backend/                  # バックエンド（Python FastAPI）
-│   ├── check.py              # 動作確認用スクリプト
-│   ├── main.py               # APIサーバー基盤（Gemini API / iTunes API連携）
-│   └── requirements.txt      # Python依存パッケージ一覧
-├── frontend/                 # フロントエンド資産
-│   ├── node_modules/         # 各種ライブラリ（自動生成）
-│   ├── public/               # 静的アセット（アイコン、画像等）
-│   └── src/                  # Reactソースコード
-│       ├── assets/           # 画像やテーマ用アセット
-│       ├── components/       # 共通コンポーネント（MusicCard, MiniPlayer, PlaylistModal等）
-│       ├── App.css           # アプリ全体のスタイル（LINE風右寄せ、コンパクトヘッダー調整）
-│       ├── App.jsx           # メインコンポーネント・全体の状態管理
-│       ├── index.css         # 全体リセットスタイル
-│       └── main.jsx          # Reactのエントリーポイント
-├── .gitignore                # Git除外設定ファイル
-├── eslint.config.js          # リンター・コードコード規約設定
-├── index.html                # メインHTMLファイル
-├── package-lock.json         # 依存パッケージのロックファイル
-├── package.json              # フロントエンド依存関係・起動スクリプト設定
-├── README.md                 # 本ドキュメント
-└── vite.config.js            # Viteビルド・環境設定ファイル
+├── backend/ # バックエンド（Python FastAPI）
+│   ├── check.py # 動作確認用スクリプト
+│   ├── main.py # APIサーバー基盤（Gemini API / iTunes API連携）
+│   └── requirements.txt # Python依存パッケージ一覧
+├── frontend/ # フロントエンド資産
+│   ├── node_modules/ # 各種ライブラリ（自動生成）
+│   ├── public/ # 静的アセット（アイコン、画像等）
+│   └── src/ # Reactソースコード
+│       ├── assets/ # 画像やテーマ用アセット
+│       ├── components/ # 共通コンポーネント（MusicCard, MiniPlayer, PlaylistModal等）
+│       ├── App.css # アプリ全体のスタイル（LINE風右寄せ、コンパクトヘッダー調整）
+│       ├── App.jsx # メインコンポーネント・全体の状態管理
+│       ├── index.css # 全体リセットスタイル
+│       └── main.jsx # Reactのエントリーポイント
+├── .gitignore # Git除外設定ファイル
+├── eslint.config.js # リンター・コードコード規約設定
+├── index.html # メインHTMLファイル
+├── package-lock.json # 依存パッケージのロックファイル
+├── package.json # フロントエンド依存関係・起動スクリプト設定
+├── README.md # 本ドキュメント
+└── vite.config.js # Viteビルド・環境設定ファイル
