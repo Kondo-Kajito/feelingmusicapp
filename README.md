@@ -74,6 +74,7 @@
 
 
 ### (6)ディレクトリ構成
+```text
 .
 ├── backend/ # バックエンド（Python FastAPI）
 │   ├── check.py # 動作確認用スクリプト
